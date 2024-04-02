@@ -21,9 +21,11 @@ func main() {
 	defer conn.Close()
 
 	cl := pb.NewBlogServiceClient(conn)
-	//createBlog(cl)
+	id := createBlog(cl)
 	//readBlog(cl, "660c2f755695f9a3097d41f4")
 	//updateBlog(cl, "660c2f755695f9a3097d41f4")
 	//readBlog(cl, "660c2f755695f9a3097d41f4")
+	listBlogs(cl)
+	deleteBlog(cl, id)
 	listBlogs(cl)
 }
