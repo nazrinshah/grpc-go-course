@@ -25,6 +25,7 @@ type SumServiceClient interface {
 	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
 	Primes(ctx context.Context, in *PrimesRequest, opts ...grpc.CallOption) (SumService_PrimesClient, error)
 	Average(ctx context.Context, opts ...grpc.CallOption) (SumService_AverageClient, error)
+	Max(ctx context.Context, opts ...grpc.CallOption) (SumService_MaxClient, error)
 }
 
 type sumServiceClient struct {
@@ -110,6 +111,37 @@ func (x *sumServiceAverageClient) CloseAndRecv() (*AverageResponse, error) {
 	return m, nil
 }
 
+func (c *sumServiceClient) Max(ctx context.Context, opts ...grpc.CallOption) (SumService_MaxClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SumService_ServiceDesc.Streams[2], "/sum.SumService/Max", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &sumServiceMaxClient{stream}
+	return x, nil
+}
+
+type SumService_MaxClient interface {
+	Send(*MaxRequest) error
+	Recv() (*MaxResponse, error)
+	grpc.ClientStream
+}
+
+type sumServiceMaxClient struct {
+	grpc.ClientStream
+}
+
+func (x *sumServiceMaxClient) Send(m *MaxRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *sumServiceMaxClient) Recv() (*MaxResponse, error) {
+	m := new(MaxResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // SumServiceServer is the server API for SumService service.
 // All implementations must embed UnimplementedSumServiceServer
 // for forward compatibility
@@ -117,6 +149,7 @@ type SumServiceServer interface {
 	Sum(context.Context, *SumRequest) (*SumResponse, error)
 	Primes(*PrimesRequest, SumService_PrimesServer) error
 	Average(SumService_AverageServer) error
+	Max(SumService_MaxServer) error
 	mustEmbedUnimplementedSumServiceServer()
 }
 
@@ -132,6 +165,9 @@ func (UnimplementedSumServiceServer) Primes(*PrimesRequest, SumService_PrimesSer
 }
 func (UnimplementedSumServiceServer) Average(SumService_AverageServer) error {
 	return status.Errorf(codes.Unimplemented, "method Average not implemented")
+}
+func (UnimplementedSumServiceServer) Max(SumService_MaxServer) error {
+	return status.Errorf(codes.Unimplemented, "method Max not implemented")
 }
 func (UnimplementedSumServiceServer) mustEmbedUnimplementedSumServiceServer() {}
 
@@ -211,6 +247,32 @@ func (x *sumServiceAverageServer) Recv() (*AverageRequest, error) {
 	return m, nil
 }
 
+func _SumService_Max_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(SumServiceServer).Max(&sumServiceMaxServer{stream})
+}
+
+type SumService_MaxServer interface {
+	Send(*MaxResponse) error
+	Recv() (*MaxRequest, error)
+	grpc.ServerStream
+}
+
+type sumServiceMaxServer struct {
+	grpc.ServerStream
+}
+
+func (x *sumServiceMaxServer) Send(m *MaxResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *sumServiceMaxServer) Recv() (*MaxRequest, error) {
+	m := new(MaxRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // SumService_ServiceDesc is the grpc.ServiceDesc for SumService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -232,6 +294,12 @@ var SumService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Average",
 			Handler:       _SumService_Average_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "Max",
+			Handler:       _SumService_Max_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

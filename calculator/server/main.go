@@ -60,6 +60,29 @@ func (s Server) Average(stream pb.SumService_AverageServer) error {
 	return nil
 }
 
+func (s Server) Max(stream pb.SumService_MaxServer) error {
+	max := int32(0)
+
+	for {
+		req, err := stream.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+
+		if err != nil {
+			log.Fatalf("Error reading stream")
+		}
+
+		if max < req.GetInput() {
+			max = req.GetInput()
+			stream.Send(&pb.MaxResponse{Result: max})
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	lis, err := net.Listen("tcp", addr)
 
