@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"net"
 
@@ -32,6 +33,28 @@ func (s Server) Primes(in *pb.PrimesRequest, stream pb.SumService_PrimesServer) 
 		} else {
 			k = k + 1
 		}
+	}
+
+	return nil
+}
+
+func (s Server) Average(stream pb.SumService_AverageServer) error {
+	sum := int32(0)
+	i := int32(0)
+
+	for {
+		req, err := stream.Recv()
+
+		if err == io.EOF {
+			return stream.SendAndClose(&pb.AverageResponse{Result: float32(sum) / float32(i)})
+		}
+
+		if err != nil {
+			log.Fatalf("Error while receiving requests: %v\n", err)
+		}
+
+		i = i + 1
+		sum = sum + req.Input
 	}
 
 	return nil

@@ -51,4 +51,38 @@ func main() {
 
 		log.Printf("Primes: %v\n", resp.Result)
 	}
+
+	reqs := []*pb.AverageRequest{
+		{
+			Input: 1,
+		},
+		{
+			Input: 2,
+		},
+		{
+			Input: 3,
+		},
+		{
+			Input: 4,
+		},
+	}
+
+	stream1, err := cl.Average(context.Background())
+
+	if err != nil {
+		log.Fatalf("Error while calling Average: %v\n", err)
+	}
+
+	for _, req := range reqs {
+		log.Println("Sending req: ", req)
+		stream1.Send(req)
+	}
+
+	res1, err := stream1.CloseAndRecv()
+
+	if err != nil {
+		log.Fatalf("Error while receiving response from Average: %v\n", err)
+	}
+
+	log.Printf("Average: %v\n", res1.Result)
 }

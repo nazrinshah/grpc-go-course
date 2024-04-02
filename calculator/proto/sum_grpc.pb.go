@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type SumServiceClient interface {
 	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
 	Primes(ctx context.Context, in *PrimesRequest, opts ...grpc.CallOption) (SumService_PrimesClient, error)
+	Average(ctx context.Context, opts ...grpc.CallOption) (SumService_AverageClient, error)
 }
 
 type sumServiceClient struct {
@@ -75,12 +76,47 @@ func (x *sumServicePrimesClient) Recv() (*PrimesResponse, error) {
 	return m, nil
 }
 
+func (c *sumServiceClient) Average(ctx context.Context, opts ...grpc.CallOption) (SumService_AverageClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SumService_ServiceDesc.Streams[1], "/sum.SumService/Average", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &sumServiceAverageClient{stream}
+	return x, nil
+}
+
+type SumService_AverageClient interface {
+	Send(*AverageRequest) error
+	CloseAndRecv() (*AverageResponse, error)
+	grpc.ClientStream
+}
+
+type sumServiceAverageClient struct {
+	grpc.ClientStream
+}
+
+func (x *sumServiceAverageClient) Send(m *AverageRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *sumServiceAverageClient) CloseAndRecv() (*AverageResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(AverageResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // SumServiceServer is the server API for SumService service.
 // All implementations must embed UnimplementedSumServiceServer
 // for forward compatibility
 type SumServiceServer interface {
 	Sum(context.Context, *SumRequest) (*SumResponse, error)
 	Primes(*PrimesRequest, SumService_PrimesServer) error
+	Average(SumService_AverageServer) error
 	mustEmbedUnimplementedSumServiceServer()
 }
 
@@ -93,6 +129,9 @@ func (UnimplementedSumServiceServer) Sum(context.Context, *SumRequest) (*SumResp
 }
 func (UnimplementedSumServiceServer) Primes(*PrimesRequest, SumService_PrimesServer) error {
 	return status.Errorf(codes.Unimplemented, "method Primes not implemented")
+}
+func (UnimplementedSumServiceServer) Average(SumService_AverageServer) error {
+	return status.Errorf(codes.Unimplemented, "method Average not implemented")
 }
 func (UnimplementedSumServiceServer) mustEmbedUnimplementedSumServiceServer() {}
 
@@ -146,6 +185,32 @@ func (x *sumServicePrimesServer) Send(m *PrimesResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _SumService_Average_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(SumServiceServer).Average(&sumServiceAverageServer{stream})
+}
+
+type SumService_AverageServer interface {
+	SendAndClose(*AverageResponse) error
+	Recv() (*AverageRequest, error)
+	grpc.ServerStream
+}
+
+type sumServiceAverageServer struct {
+	grpc.ServerStream
+}
+
+func (x *sumServiceAverageServer) SendAndClose(m *AverageResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *sumServiceAverageServer) Recv() (*AverageRequest, error) {
+	m := new(AverageRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // SumService_ServiceDesc is the grpc.ServiceDesc for SumService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -163,6 +228,11 @@ var SumService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "Primes",
 			Handler:       _SumService_Primes_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "Average",
+			Handler:       _SumService_Average_Handler,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "sum.proto",
