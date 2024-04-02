@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "grpc-go-course/sum/proto"
+	pb "grpc-go-course/calculator/proto"
 )
 
 var (
@@ -20,6 +20,21 @@ type Server struct {
 
 func (s Server) Sum(ctx context.Context, req *pb.SumRequest) (*pb.SumResponse, error) {
 	return &pb.SumResponse{Result: req.A + req.B}, nil
+}
+
+func (s Server) Primes(in *pb.PrimesRequest, stream pb.SumService_PrimesServer) error {
+	k := int32(2)
+	N := in.Input
+	for N > 1 {
+		if N%k == 0 {
+			N = N / k
+			stream.Send(&pb.PrimesResponse{Result: k})
+		} else {
+			k = k + 1
+		}
+	}
+
+	return nil
 }
 
 func main() {
