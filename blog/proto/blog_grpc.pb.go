@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BlogServiceClient interface {
 	CreateBlog(ctx context.Context, in *Blog, opts ...grpc.CallOption) (*BlogId, error)
-	ReadBlog(ctx context.Context, in *Blog, opts ...grpc.CallOption) (*Blog, error)
+	ReadBlog(ctx context.Context, in *BlogId, opts ...grpc.CallOption) (*Blog, error)
 	UpdateBlog(ctx context.Context, in *Blog, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteBlog(ctx context.Context, in *BlogId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListBlog(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (BlogService_ListBlogClient, error)
@@ -47,7 +47,7 @@ func (c *blogServiceClient) CreateBlog(ctx context.Context, in *Blog, opts ...gr
 	return out, nil
 }
 
-func (c *blogServiceClient) ReadBlog(ctx context.Context, in *Blog, opts ...grpc.CallOption) (*Blog, error) {
+func (c *blogServiceClient) ReadBlog(ctx context.Context, in *BlogId, opts ...grpc.CallOption) (*Blog, error) {
 	out := new(Blog)
 	err := c.cc.Invoke(ctx, "/blog.BlogService/ReadBlog", in, out, opts...)
 	if err != nil {
@@ -111,7 +111,7 @@ func (x *blogServiceListBlogClient) Recv() (*Blog, error) {
 // for forward compatibility
 type BlogServiceServer interface {
 	CreateBlog(context.Context, *Blog) (*BlogId, error)
-	ReadBlog(context.Context, *Blog) (*Blog, error)
+	ReadBlog(context.Context, *BlogId) (*Blog, error)
 	UpdateBlog(context.Context, *Blog) (*emptypb.Empty, error)
 	DeleteBlog(context.Context, *BlogId) (*emptypb.Empty, error)
 	ListBlog(*emptypb.Empty, BlogService_ListBlogServer) error
@@ -125,7 +125,7 @@ type UnimplementedBlogServiceServer struct {
 func (UnimplementedBlogServiceServer) CreateBlog(context.Context, *Blog) (*BlogId, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBlog not implemented")
 }
-func (UnimplementedBlogServiceServer) ReadBlog(context.Context, *Blog) (*Blog, error) {
+func (UnimplementedBlogServiceServer) ReadBlog(context.Context, *BlogId) (*Blog, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadBlog not implemented")
 }
 func (UnimplementedBlogServiceServer) UpdateBlog(context.Context, *Blog) (*emptypb.Empty, error) {
@@ -169,7 +169,7 @@ func _BlogService_CreateBlog_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _BlogService_ReadBlog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Blog)
+	in := new(BlogId)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func _BlogService_ReadBlog_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/blog.BlogService/ReadBlog",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BlogServiceServer).ReadBlog(ctx, req.(*Blog))
+		return srv.(BlogServiceServer).ReadBlog(ctx, req.(*BlogId))
 	}
 	return interceptor(ctx, in, info, handler)
 }

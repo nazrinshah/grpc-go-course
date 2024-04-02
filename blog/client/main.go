@@ -21,5 +21,6 @@ func main() {
 	defer conn.Close()
 
 	cl := pb.NewBlogServiceClient(conn)
-	createBlog(cl)
+	//createBlog(cl)
+	readBlog(cl, "660c2f755695f9a3097d41f4")
 }
