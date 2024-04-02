@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
 	pb "grpc-go-course/calculator/proto"
 )
@@ -142,6 +144,31 @@ func doMax(cl pb.SumServiceClient) {
 	<-waitc
 }
 
+func doSqrt(cl pb.SumServiceClient, n int32) {
+	log.Println("doSqrt was invoked")
+
+	res, err := cl.Sqrt(context.Background(), &pb.SqrtRequest{
+		Number: n,
+	})
+
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			log.Printf("Error message from server: %s\n", e.Message())
+			log.Printf("Error status from server: %s\n", e.Code())
+
+			if e.Code() == codes.InvalidArgument {
+				log.Println("We probably sent a negative number!")
+			}
+
+			return
+		} else {
+			log.Fatalf("a non gRPC error: %v\n", err)
+		}
+	}
+
+	log.Printf("Sqrt: %f\n", res.Result)
+}
+
 func main() {
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
@@ -156,5 +183,7 @@ func main() {
 	//doSum(cl)
 	//doPrimes(cl)
 	//doAverage(cl)
-	doMax(cl)
+	//doMax(cl)
+	doSqrt(cl, -1)
+	doSqrt(cl, 2)
 }
